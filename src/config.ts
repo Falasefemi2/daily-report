@@ -1,4 +1,4 @@
-import { Config, Context, Duration, Effect, Layer, Option, Redacted } from "effect"
+import { Config, Context, Duration, Effect, Layer, type Option, type Redacted } from "effect"
 
 export interface AppConfig {
   readonly databaseUrl: Redacted.Redacted
@@ -12,9 +12,7 @@ export interface AppConfig {
   readonly migrationsDirectory: string
 }
 
-export class AppConfigService extends Context.Service<AppConfigService, AppConfig>()(
-  "@app/AppConfig",
-) {}
+export class AppConfigService extends Context.Service<AppConfigService, AppConfig>()("@app/AppConfig") {}
 
 const repoPaths = Config.string("REPO_PATHS").pipe(
   Config.withDefault(""),
@@ -33,23 +31,15 @@ export const layer = Layer.effect(
   Effect.gen(function* () {
     const databaseUrl = yield* Config.redacted("DATABASE_URL")
     const groqApiKey = yield* Config.option(Config.redacted("GROQ_API_KEY"))
-    const groqModel = yield* Config.string("GROQ_MODEL").pipe(
-      Config.withDefault("llama-3.3-70b-versatile"),
-    )
+    const groqModel = yield* Config.string("GROQ_MODEL").pipe(Config.withDefault("llama-3.3-70b-versatile"))
     const groqEndpoint = yield* Config.string("GROQ_ENDPOINT").pipe(
       Config.withDefault("https://api.groq.com/openai/v1/chat/completions"),
     )
     const repos = yield* repoPaths
-    const pollInterval = yield* Config.duration("POLL_INTERVAL").pipe(
-      Config.withDefault(Duration.seconds(5)),
-    )
+    const pollInterval = yield* Config.duration("POLL_INTERVAL").pipe(Config.withDefault(Duration.seconds(5)))
     const historyPath = yield* shellHistoryPath
-    const reviewDirectory = yield* Config.string("REVIEW_DIR").pipe(
-      Config.withDefault("~/daily-reviews"),
-    )
-    const migrationsDirectory = yield* Config.string("MIGRATIONS_DIR").pipe(
-      Config.withDefault("migrations"),
-    )
+    const reviewDirectory = yield* Config.string("REVIEW_DIR").pipe(Config.withDefault("~/daily-reviews"))
+    const migrationsDirectory = yield* Config.string("MIGRATIONS_DIR").pipe(Config.withDefault("migrations"))
 
     return AppConfigService.of({
       databaseUrl,

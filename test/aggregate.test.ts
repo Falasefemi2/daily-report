@@ -1,21 +1,11 @@
-import { Schema } from "effect"
 import { describe, expect, it } from "bun:test"
-import {
-  aggregate,
-  countContextSwitches,
-  DailyReport,
-} from "../src/aggregate/aggregate.js"
+import { Schema } from "effect"
+import type { WindowInterval } from "../src/aggregate/aggregate.js"
+import { aggregate, countContextSwitches, DailyReport } from "../src/aggregate/aggregate.js"
 import { categorizeApp } from "../src/aggregate/categories.js"
 import { redactTitle } from "../src/aggregate/redact.js"
-import type { WindowInterval } from "../src/aggregate/aggregate.js"
 
-const interval = (
-  id: number,
-  app: string,
-  title: string,
-  startMin: number,
-  durationMin: number,
-): WindowInterval => {
+const interval = (id: number, app: string, title: string, startMin: number, durationMin: number): WindowInterval => {
   const start = new Date(2026, 7, 4, 9, startMin, 0, 0)
   return { id, app, title, startAt: start, endAt: new Date(start.getTime() + durationMin * 60000) }
 }
@@ -91,9 +81,7 @@ describe("aggregate", () => {
   it("applies browser title redaction in top titles", () => {
     const report = aggregate({
       date: "2026-08-04",
-      intervals: [
-        interval(1, "Google Chrome", "GitHub - alice/secret-project", 0, 45),
-      ],
+      intervals: [interval(1, "Google Chrome", "GitHub - alice/secret-project", 0, 45)],
       commits: [],
     })
     expect(report.topApps[0]?.topTitles).toEqual(["GitHub"])
@@ -102,10 +90,7 @@ describe("aggregate", () => {
   it("computes switches per hour from active time", () => {
     const report = aggregate({
       date: "2026-08-04",
-      intervals: [
-        interval(1, "Code", "a.ts", 0, 60),
-        interval(2, "Slack", "#general", 60, 60),
-      ],
+      intervals: [interval(1, "Code", "a.ts", 0, 60), interval(2, "Slack", "#general", 60, 60)],
       commits: [],
     })
     expect(report.contextSwitches).toBe(1)

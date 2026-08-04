@@ -1,6 +1,6 @@
 import { Context, Effect, Layer, Schema } from "effect"
-import { AppConfigService } from "../config.js"
 import type { GitCommit } from "../aggregate/aggregate.js"
+import { AppConfigService } from "../config.js"
 import * as Shell from "../tracker/shell.js"
 
 export interface Interface {
@@ -9,15 +9,12 @@ export interface Interface {
 
 export class GitCommits extends Context.Service<GitCommits, Interface>()("@app/GitCommits") {}
 
-export class GitError extends Schema.TaggedErrorClass<GitError>()(
-  "GitCommits.GitError",
-  { repo: Schema.String, message: Schema.String },
-) {}
+export class GitError extends Schema.TaggedErrorClass<GitError>()("GitCommits.GitError", {
+  repo: Schema.String,
+  message: Schema.String,
+}) {}
 
-const listRepo = (
-  repo: string,
-  since: string,
-): Effect.Effect<ReadonlyArray<GitCommit>, GitError> =>
+const listRepo = (repo: string, since: string): Effect.Effect<ReadonlyArray<GitCommit>, GitError> =>
   Effect.gen(function* () {
     const out = yield* Shell.run(repo, [
       "git",
@@ -25,11 +22,7 @@ const listRepo = (
       `--since=${since}`,
       "--date=iso-strict",
       "--pretty=format:%H|%aI|%s",
-    ]).pipe(
-      Effect.mapError(
-        (error): GitError => new GitError({ repo, message: error.message }),
-      ),
-    )
+    ]).pipe(Effect.mapError((error): GitError => new GitError({ repo, message: error.message })))
     return out.split("\n").flatMap((line) => {
       const [hash, at, ...messageParts] = line.split("|")
       if (!hash || !at) return []
@@ -52,9 +45,7 @@ export const layer = Layer.effect(
           listRepo(repo, since).pipe(
             Effect.matchEffect({
               onFailure: (error) =>
-                Effect.logWarning(
-                  `git log in ${repo} failed: ${error.message}`,
-                ).pipe(Effect.as([])),
+                Effect.logWarning(`git log in ${repo} failed: ${error.message}`).pipe(Effect.as([])),
               onSuccess: (commits) => Effect.succeed(commits),
             }),
           ),

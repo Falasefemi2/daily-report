@@ -12,21 +12,15 @@ export interface ReadResult {
   readonly newOffset: number
 }
 
-export class ShellHistoryError extends Schema.TaggedErrorClass<ShellHistoryError>()(
-  "ShellHistory.ShellHistoryError",
-  { message: Schema.String },
-) {}
+export class ShellHistoryError extends Schema.TaggedErrorClass<ShellHistoryError>()("ShellHistory.ShellHistoryError", {
+  message: Schema.String,
+}) {}
 
 export interface Interface {
-  readonly readNew: (
-    path: string,
-    offset: number,
-  ) => Effect.Effect<ReadResult, ShellHistoryError>
+  readonly readNew: (path: string, offset: number) => Effect.Effect<ReadResult, ShellHistoryError>
 }
 
-export class ShellHistory extends Context.Service<ShellHistory, Interface>()(
-  "@app/ShellHistory",
-) {}
+export class ShellHistory extends Context.Service<ShellHistory, Interface>()("@app/ShellHistory") {}
 
 const zshLine = /^:\s*(\d+):\d+;(.*)$/
 const bashMarker = /^#(\d+)$/
@@ -63,10 +57,7 @@ const parseBash = (lines: ReadonlyArray<string>): ReadonlyArray<ShellEvent> => {
   return events
 }
 
-const parseHistory = (
-  path: string,
-  lines: ReadonlyArray<string>,
-): ReadonlyArray<ShellEvent> => {
+const parseHistory = (path: string, lines: ReadonlyArray<string>): ReadonlyArray<ShellEvent> => {
   if (path.includes("zsh")) return parseZsh(lines)
   if (path.includes("bash")) return parseBash(lines)
   return []

@@ -1,14 +1,14 @@
 import { Effect } from "effect"
 import { layer as appConfigLayer } from "./config.js"
+import { todayLocal } from "./date.js"
 import { layer as dbLayer, migrateProgram } from "./db.js"
-import { layer as activityRepoLayer } from "./tracker/activity-repo.js"
-import { layer as shellHistoryLayer } from "./tracker/shell-history.js"
 import { layer as gitCommitsLayer } from "./git/commits.js"
 import { layer as groqLayer } from "./llm/groq.js"
-import { platformLayer } from "./tracker/platforms.js"
-import { Tracker, layer as trackerLayer } from "./tracker/tracker.js"
 import { reportProgram } from "./report/report.js"
-import { todayLocal } from "./date.js"
+import { layer as activityRepoLayer } from "./tracker/activity-repo.js"
+import { platformLayer } from "./tracker/platforms.js"
+import { layer as shellHistoryLayer } from "./tracker/shell-history.js"
+import { Tracker, layer as trackerLayer } from "./tracker/tracker.js"
 
 const usage = `Daily Activity Review Bot
 

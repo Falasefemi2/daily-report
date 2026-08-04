@@ -1,6 +1,6 @@
 import { Schema } from "effect"
-import { categorizeApp } from "./categories.js"
 import type { Category } from "./categories.js"
+import { categorizeApp } from "./categories.js"
 import { redactTitle } from "./redact.js"
 
 // ---------------------------------------------------------------------------
@@ -25,13 +25,7 @@ export interface GitCommit {
 // Wire model — the single JSON document sent to the LLM
 // ---------------------------------------------------------------------------
 
-export const CategorySchema = Schema.Literals([
-  "code editor",
-  "terminal",
-  "browser",
-  "comms",
-  "other",
-])
+export const CategorySchema = Schema.Literals(["code editor", "terminal", "browser", "comms", "other"])
 
 export const AppTime = Schema.Struct({
   app: Schema.String,
@@ -94,9 +88,7 @@ const sortByStart = (intervals: ReadonlyArray<WindowInterval>): ReadonlyArray<Wi
  * Number of context switches across the day: transitions between consecutive
  * window intervals where the (app, title) pair differs.
  */
-export const countContextSwitches = (
-  intervals: ReadonlyArray<WindowInterval>,
-): number => {
+export const countContextSwitches = (intervals: ReadonlyArray<WindowInterval>): number => {
   const ordered = sortByStart(intervals)
   let switches = 0
   let previous: { readonly app: string; readonly title: string } | undefined
@@ -141,7 +133,10 @@ export const aggregate = (options: {
   const byApp = new Map<string, number>()
   const byAppTitles = new Map<string, Array<WindowInterval>>()
   for (const interval of intervals) {
-    byApp.set(interval.app, (byApp.get(interval.app) ?? 0) + Math.max(0, interval.endAt.getTime() - interval.startAt.getTime()))
+    byApp.set(
+      interval.app,
+      (byApp.get(interval.app) ?? 0) + Math.max(0, interval.endAt.getTime() - interval.startAt.getTime()),
+    )
     const titles = byAppTitles.get(interval.app) ?? []
     titles.push(interval)
     byAppTitles.set(interval.app, titles)
@@ -152,12 +147,14 @@ export const aggregate = (options: {
 
   const categories = emptyBreakdown()
   const topApps = [...byApp.entries()]
-    .map(([app, ms]): AppTime => ({
-      app,
-      category: categorizeApp(app),
-      minutes: Math.round(toMinutes(ms) * 10) / 10,
-      topTitles: [...topTitlesForApp(byAppTitles.get(app) ?? [], app, 5)],
-    }))
+    .map(
+      ([app, ms]): AppTime => ({
+        app,
+        category: categorizeApp(app),
+        minutes: Math.round(toMinutes(ms) * 10) / 10,
+        topTitles: [...topTitlesForApp(byAppTitles.get(app) ?? [], app, 5)],
+      }),
+    )
     .sort((a, b) => b.minutes - a.minutes)
     .slice(0, 10)
 
@@ -178,11 +175,13 @@ export const aggregate = (options: {
     categories,
     commits: [...commits]
       .sort((a, b) => b.at.getTime() - a.at.getTime())
-      .map((commit): GitCommitWire => ({
-        repo: commit.repo,
-        message: commit.message,
-        at: commit.at.toISOString(),
-      })),
+      .map(
+        (commit): GitCommitWire => ({
+          repo: commit.repo,
+          message: commit.message,
+          at: commit.at.toISOString(),
+        }),
+      ),
   }
 }
 

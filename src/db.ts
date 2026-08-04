@@ -1,12 +1,10 @@
 import { PgClient } from "@effect/sql-pg"
 import { Config, Effect } from "effect"
 import { Migrator, SqlClient } from "effect/unstable/sql"
-import * as Fs from "./fs.js"
 import { AppConfigService } from "./config.js"
+import * as Fs from "./fs.js"
 
-export const layer = PgClient.layerConfig(
-  Config.redacted("DATABASE_URL").pipe(Config.map((url) => ({ url }))),
-)
+export const layer = PgClient.layerConfig(Config.redacted("DATABASE_URL").pipe(Config.map((url) => ({ url }))))
 
 /**
  * Migration loader that reads plain `.sql` files named `<id>_<name>.sql` from

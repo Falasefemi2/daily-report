@@ -15,9 +15,7 @@ export interface Interface {
   readonly sample: Effect.Effect<WindowSample, WindowSamplerError>
 }
 
-export class WindowSampler extends Context.Service<WindowSampler, Interface>()(
-  "@app/WindowSampler",
-) {}
+export class WindowSampler extends Context.Service<WindowSampler, Interface>()("@app/WindowSampler") {}
 
 export const layerStub = Layer.succeed(
   WindowSampler,

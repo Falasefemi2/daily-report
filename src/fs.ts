@@ -1,6 +1,6 @@
-import { Effect } from "effect"
-import * as fs from "node:fs/promises"
 import type { Stats } from "node:fs"
+import * as fs from "node:fs/promises"
+import { Effect } from "effect"
 
 export const readDirectory = (directory: string): Effect.Effect<ReadonlyArray<string>, Error> =>
   Effect.tryPromise({
@@ -14,10 +14,7 @@ export const readFileString = (file: string): Effect.Effect<string, Error> =>
     catch: (cause) => new Error(`Failed to read file ${file}: ${String(cause)}`),
   })
 
-export const writeFileString = (
-  file: string,
-  content: string,
-): Effect.Effect<void, Error> =>
+export const writeFileString = (file: string, content: string): Effect.Effect<void, Error> =>
   Effect.tryPromise({
     try: () => fs.writeFile(file, content, "utf8"),
     catch: (cause) => new Error(`Failed to write file ${file}: ${String(cause)}`),

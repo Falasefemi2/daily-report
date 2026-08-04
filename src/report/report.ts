@@ -1,17 +1,16 @@
 import { Effect, Schema } from "effect"
-import { aggregate, DailyReport } from "../aggregate/aggregate.js"
 import type { WindowInterval } from "../aggregate/aggregate.js"
+import { aggregate, type DailyReport } from "../aggregate/aggregate.js"
 import { AppConfigService } from "../config.js"
 import { expandHome, localDayRange } from "../date.js"
 import * as Fs from "../fs.js"
 import { GitCommits } from "../git/commits.js"
-import { LlmClient, LlmResponse } from "../llm/llm-client.js"
+import { LlmClient, type LlmResponse } from "../llm/llm-client.js"
 import { ActivityRepo } from "../tracker/activity-repo.js"
 
-export class ReportError extends Schema.TaggedErrorClass<ReportError>()(
-  "Report.ReportError",
-  { message: Schema.String },
-) {}
+export class ReportError extends Schema.TaggedErrorClass<ReportError>()("Report.ReportError", {
+  message: Schema.String,
+}) {}
 
 const minutesLabel = (minutes: number): string => {
   if (minutes >= 60) {
@@ -53,10 +52,12 @@ export const render = (report: DailyReport, response: LlmResponse): string => {
   return lines.join("\n")
 }
 
-const mapError = (label: string) => (error: unknown): ReportError =>
-  new ReportError({
-    message: `${label}: ${error instanceof Error ? error.message : String(error)}`,
-  })
+const mapError =
+  (label: string) =>
+  (error: unknown): ReportError =>
+    new ReportError({
+      message: `${label}: ${error instanceof Error ? error.message : String(error)}`,
+    })
 
 /**
  * Produces the end-of-day report for a local date (YYYY-MM-DD), optionally
@@ -64,11 +65,7 @@ const mapError = (label: string) => (error: unknown): ReportError =>
  */
 export const reportProgram = (
   date: string,
-): Effect.Effect<
-  void,
-  ReportError,
-  ActivityRepo | GitCommits | LlmClient | AppConfigService
-> =>
+): Effect.Effect<void, ReportError, ActivityRepo | GitCommits | LlmClient | AppConfigService> =>
   Effect.gen(function* () {
     const repo = yield* ActivityRepo
     const git = yield* GitCommits
@@ -77,12 +74,8 @@ export const reportProgram = (
 
     const [start, end] = localDayRange(date)
 
-    const rows = yield* repo.listDay(start, end).pipe(
-      Effect.mapError(mapError("listing activity")),
-    )
-    const commits = yield* git.listSince(start).pipe(
-      Effect.mapError(mapError("listing git commits")),
-    )
+    const rows = yield* repo.listDay(start, end).pipe(Effect.mapError(mapError("listing activity")))
+    const commits = yield* git.listSince(start).pipe(Effect.mapError(mapError("listing git commits")))
 
     const intervals = rows.map(
       (row): WindowInterval => ({
@@ -100,19 +93,13 @@ export const reportProgram = (
     }
 
     const report = aggregate({ date, intervals, commits })
-    const response = yield* llm.summarize(report).pipe(
-      Effect.mapError(mapError("summarizing")),
-    )
+    const response = yield* llm.summarize(report).pipe(Effect.mapError(mapError("summarizing")))
 
     const text = render(report, response)
     console.log(text)
 
     const directory = expandHome(config.reviewDirectory)
-    yield* Fs.makeDirectory(directory, { recursive: true }).pipe(
-      Effect.mapError(mapError("creating review directory")),
-    )
-    yield* Fs.writeFileString(`${directory}/${date}.md`, text).pipe(
-      Effect.mapError(mapError("writing review file")),
-    )
+    yield* Fs.makeDirectory(directory, { recursive: true }).pipe(Effect.mapError(mapError("creating review directory")))
+    yield* Fs.writeFileString(`${directory}/${date}.md`, text).pipe(Effect.mapError(mapError("writing review file")))
     yield* Effect.log(`Wrote ${directory}/${date}.md`)
   })

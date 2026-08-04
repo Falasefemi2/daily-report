@@ -4,8 +4,7 @@ import * as path from "node:path"
 const pad = (n: number): string => String(n).padStart(2, "0")
 
 /** Local-timezone YYYY-MM-DD string for a Date. */
-export const localDateString = (d: Date): string =>
-  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+export const localDateString = (d: Date): string => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 
 export const todayLocal = (): string => localDateString(new Date())
 

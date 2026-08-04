@@ -1,14 +1,12 @@
 export type Category = "code editor" | "terminal" | "browser" | "comms" | "other"
 
-export const categories: ReadonlyArray<Category> = [
-  "code editor",
-  "terminal",
-  "browser",
-  "comms",
-  "other",
-]
+export const categories: ReadonlyArray<Category> = ["code editor", "terminal", "browser", "comms", "other"]
 
-const normalize = (app: string): string => app.toLowerCase().replace(/\.exe$/, "").trim()
+const normalize = (app: string): string =>
+  app
+    .toLowerCase()
+    .replace(/\.exe$/, "")
+    .trim()
 
 /**
  * Static app-name -> category map, keyed by normalized app name (lowercase,
@@ -84,5 +82,4 @@ const appCategories: Readonly<Record<string, Category>> = {
   // everything else falls through to "other"
 }
 
-export const categorizeApp = (app: string): Category =>
-  appCategories[normalize(app)] ?? "other"
+export const categorizeApp = (app: string): Category => appCategories[normalize(app)] ?? "other"

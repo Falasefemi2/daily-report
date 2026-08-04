@@ -1,8 +1,8 @@
 import { Context, Effect, Layer, Option, Ref, Schedule } from "effect"
 import { AppConfigService } from "../config.js"
 import { ActivityRepo } from "./activity-repo.js"
-import { ShellHistory } from "./shell-history.js"
 import type { ShellEvent } from "./shell-history.js"
+import { ShellHistory } from "./shell-history.js"
 import { WindowSampler } from "./window-sampler.js"
 
 export interface Interface {
@@ -27,10 +27,7 @@ export const layer = Layer.effect(
     const ingestSample = Effect.gen(function* () {
       const sample = yield* sampler.sample.pipe(
         Effect.matchEffect({
-          onFailure: (error) =>
-            Effect.logWarning(`window sample failed: ${error.message}`).pipe(
-              Effect.as(undefined),
-            ),
+          onFailure: (error) => Effect.logWarning(`window sample failed: ${error.message}`).pipe(Effect.as(undefined)),
           onSuccess: (sample) => Effect.succeed(sample),
         }),
       )
@@ -41,8 +38,7 @@ export const layer = Layer.effect(
         // Debounce: extend the open interval's end time, no new row.
         yield* repo.updateEventEnd(current.id, sample.sampledAt).pipe(
           Effect.matchEffect({
-            onFailure: (error) =>
-              Effect.logWarning(`extend interval failed: ${error.message}`),
+            onFailure: (error) => Effect.logWarning(`extend interval failed: ${error.message}`),
             onSuccess: () => Effect.void,
           }),
         )
@@ -53,8 +49,7 @@ export const layer = Layer.effect(
       if (current !== undefined) {
         yield* repo.updateEventEnd(current.id, sample.sampledAt).pipe(
           Effect.matchEffect({
-            onFailure: (error) =>
-              Effect.logWarning(`close interval failed: ${error.message}`),
+            onFailure: (error) => Effect.logWarning(`close interval failed: ${error.message}`),
             onSuccess: () => Effect.void,
           }),
         )
@@ -72,9 +67,7 @@ export const layer = Layer.effect(
         .pipe(
           Effect.matchEffect({
             onFailure: (error) =>
-              Effect.logWarning(`insert interval failed: ${error.message}`).pipe(
-                Effect.as(undefined),
-              ),
+              Effect.logWarning(`insert interval failed: ${error.message}`).pipe(Effect.as(undefined)),
             onSuccess: (row) => Effect.succeed(row),
           }),
         )
@@ -96,9 +89,7 @@ export const layer = Layer.effect(
       const result = yield* history.readNew(path, offset).pipe(
         Effect.matchEffect({
           onFailure: (error) =>
-            Effect.logWarning(`shell history read failed: ${error.message}`).pipe(
-              Effect.as(undefined),
-            ),
+            Effect.logWarning(`shell history read failed: ${error.message}`).pipe(Effect.as(undefined)),
           onSuccess: (result) => Effect.succeed(result),
         }),
       )
@@ -120,8 +111,7 @@ export const layer = Layer.effect(
             })
             .pipe(
               Effect.matchEffect({
-                onFailure: (error) =>
-                  Effect.logWarning(`shell insert failed: ${error.message}`),
+                onFailure: (error) => Effect.logWarning(`shell insert failed: ${error.message}`),
                 onSuccess: () => Effect.void,
               }),
             ),

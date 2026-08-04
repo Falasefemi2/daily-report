@@ -1,14 +1,10 @@
 import { Duration, Effect, Layer, Option, Redacted, Schedule, Schema } from "effect"
-import { DailyReport } from "../aggregate/aggregate.js"
+import type { DailyReport } from "../aggregate/aggregate.js"
 import { AppConfigService } from "../config.js"
 import { LlmClient, LlmError, LlmResponse } from "./llm-client.js"
 import { buildUserPrompt, systemPrompt } from "./prompt.js"
 
-const postChat = (
-  endpoint: string,
-  apiKey: Redacted.Redacted,
-  body: unknown,
-): Effect.Effect<string, LlmError> =>
+const postChat = (endpoint: string, apiKey: Redacted.Redacted, body: unknown): Effect.Effect<string, LlmError> =>
   Effect.tryPromise({
     try: async () => {
       const response = await fetch(endpoint, {
@@ -25,8 +21,7 @@ const postChat = (
       }
       return text
     },
-    catch: (cause) =>
-      new LlmError({ message: cause instanceof Error ? cause.message : String(cause) }),
+    catch: (cause) => new LlmError({ message: cause instanceof Error ? cause.message : String(cause) }),
   })
 
 const extractContent = (raw: string): Effect.Effect<unknown, LlmError> =>
@@ -41,8 +36,7 @@ const extractContent = (raw: string): Effect.Effect<unknown, LlmError> =>
       }
       return JSON.parse(content) as unknown
     },
-    catch: (cause) =>
-      new LlmError({ message: cause instanceof Error ? cause.message : String(cause) }),
+    catch: (cause) => new LlmError({ message: cause instanceof Error ? cause.message : String(cause) }),
   })
 
 export const layer = Layer.effect(
@@ -52,9 +46,7 @@ export const layer = Layer.effect(
 
     const summarize = Effect.fn("LlmClient.summarize")(function* (report: DailyReport) {
       if (Option.isNone(config.groqApiKey)) {
-        return yield* Effect.fail(
-          new LlmError({ message: "GROQ_API_KEY is not set" }),
-        )
+        return yield* Effect.fail(new LlmError({ message: "GROQ_API_KEY is not set" }))
       }
       const apiKey = config.groqApiKey.value
 
@@ -70,27 +62,18 @@ export const layer = Layer.effect(
 
       const raw = yield* postChat(config.groqEndpoint, apiKey, body).pipe(
         Effect.timeout(Duration.seconds(60)),
-        Effect.retry(
-          Schedule.exponential("500 millis").pipe(
-            Schedule.jittered,
-            Schedule.upTo({ times: 4 }),
-          ),
-        ),
+        Effect.retry(Schedule.exponential("500 millis").pipe(Schedule.jittered, Schedule.upTo({ times: 4 }))),
         Effect.mapError(
           (error): LlmError =>
             new LlmError({
-              message:
-                error instanceof Error ? error.message : "Groq request timed out",
+              message: error instanceof Error ? error.message : "Groq request timed out",
             }),
         ),
       )
 
       const parsed = yield* extractContent(raw)
       const decoded = yield* Schema.decodeUnknownEffect(LlmResponse)(parsed).pipe(
-        Effect.mapError(
-          (error): LlmError =>
-            new LlmError({ message: `Invalid LLM response: ${error.message}` }),
-        ),
+        Effect.mapError((error): LlmError => new LlmError({ message: `Invalid LLM response: ${error.message}` })),
       )
       return decoded
     })
