@@ -10,7 +10,7 @@ jobs:
   review:
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       issues: write
     uses: Falasefemi2/ai-code-review-bot/.github/workflows/review.yml@main
     secrets:
