@@ -12,6 +12,7 @@ import { Tracker, layer as trackerLayer } from "./tracker/tracker.js"
 
 // Bot verification comment: this change exists so the AI review bot has
 // something to review on a fresh PR.
+// another comment for AI BOT to review
 const usage = `Daily Activity Review Bot
 
 usage:
