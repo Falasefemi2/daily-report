@@ -1,4 +1,4 @@
-import { Effect } from "effect"
+import * as Effect from "effect/Effect"
 import { layer as appConfigLayer } from "./config.js"
 import { todayLocal } from "./date.js"
 import { layer as dbLayer, migrateProgram } from "./db.js"

@@ -1,4 +1,5 @@
-import { Effect, Schema } from "effect"
+import * as Effect from "effect/Effect"
+import * as Schema from "effect/Schema"
 import type { WindowInterval } from "../aggregate/aggregate.js"
 import { aggregate, type DailyReport } from "../aggregate/aggregate.js"
 import { AppConfigService } from "../config.js"

@@ -1,4 +1,5 @@
-import { Effect, Layer } from "effect"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
 import { run as runShell, type ShellError } from "./shell.js"
 import type { WindowSample } from "./window-sampler.js"
 import { layerStub, WindowSampler, WindowSamplerError } from "./window-sampler.js"

@@ -3,16 +3,16 @@ import type { GitCommit } from "../aggregate/aggregate.js"
 import { AppConfigService } from "../config.js"
 import * as Shell from "../tracker/shell.js"
 
+export class GitError extends Schema.TaggedErrorClass<GitError>()("GitCommits.GitError", {
+  repo: Schema.String,
+  message: Schema.String,
+}) {}
+
 export interface Interface {
   readonly listSince: (start: Date) => Effect.Effect<ReadonlyArray<GitCommit>, GitError>
 }
 
 export class GitCommits extends Context.Service<GitCommits, Interface>()("@app/GitCommits") {}
-
-export class GitError extends Schema.TaggedErrorClass<GitError>()("GitCommits.GitError", {
-  repo: Schema.String,
-  message: Schema.String,
-}) {}
 
 const listRepo = (repo: string, since: string): Effect.Effect<ReadonlyArray<GitCommit>, GitError> =>
   Effect.gen(function* () {

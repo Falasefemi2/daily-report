@@ -1,6 +1,6 @@
 import type { Stats } from "node:fs"
 import * as fs from "node:fs/promises"
-import { Effect } from "effect"
+import * as Effect from "effect/Effect"
 
 export const readDirectory = (directory: string): Effect.Effect<ReadonlyArray<string>, Error> =>
   Effect.tryPromise({

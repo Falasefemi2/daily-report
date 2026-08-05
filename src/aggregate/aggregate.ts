@@ -1,4 +1,4 @@
-import { Schema } from "effect"
+import * as Schema from "effect/Schema"
 import type { Category } from "./categories.js"
 import { categorizeApp } from "./categories.js"
 import { redactTitle } from "./redact.js"

@@ -1,4 +1,7 @@
-import { Context, Effect, Layer, Schema } from "effect"
+import * as Context from "effect/Context"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
+import * as Schema from "effect/Schema"
 import type { SqlError } from "effect/unstable/sql"
 import { SqlClient } from "effect/unstable/sql"
 
@@ -60,7 +63,7 @@ export const layer = Layer.effect(
       `
       const rawId = rows[0]?.id
       if (rawId === undefined) {
-        return yield* Effect.fail(new PersistenceError({ message: "INSERT returned no id" }))
+        return yield* new PersistenceError({ message: "INSERT returned no id" })
       }
       return { id: Number(rawId) }
     })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { Schema } from "effect"
+import * as Schema from "effect/Schema"
 import type { WindowInterval } from "../src/aggregate/aggregate.js"
 import { aggregate, countContextSwitches, DailyReport } from "../src/aggregate/aggregate.js"
 import { categorizeApp } from "../src/aggregate/categories.js"

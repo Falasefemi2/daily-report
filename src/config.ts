@@ -1,4 +1,9 @@
-import { Config, Context, Duration, Effect, Layer, type Option, type Redacted } from "effect"
+import type { Option, Redacted } from "effect"
+import * as Config from "effect/Config"
+import * as Context from "effect/Context"
+import * as Duration from "effect/Duration"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
 
 export interface AppConfig {
   readonly databaseUrl: Redacted.Redacted

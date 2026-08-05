@@ -1,5 +1,6 @@
 import { PgClient } from "@effect/sql-pg"
-import { Config, Effect } from "effect"
+import * as Config from "effect/Config"
+import * as Effect from "effect/Effect"
 import { Migrator, SqlClient } from "effect/unstable/sql"
 import { AppConfigService } from "./config.js"
 import * as Fs from "./fs.js"
