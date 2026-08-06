@@ -1,4 +1,8 @@
+import { BunRuntime, BunServices } from "@effect/platform-bun"
 import * as Effect from "effect/Effect"
+import * as Option from "effect/Option"
+import * as Schema from "effect/Schema"
+import { Command, Flag } from "effect/unstable/cli"
 import { layer as appConfigLayer } from "./config.js"
 import { todayLocal } from "./date.js"
 import { layer as dbLayer, migrateProgram } from "./db.js"
@@ -10,48 +14,42 @@ import { platformLayer } from "./tracker/platforms.js"
 import { layer as shellHistoryLayer } from "./tracker/shell-history.js"
 import { Tracker, layer as trackerLayer } from "./tracker/tracker.js"
 
-// Bot verification comment: this change exists so the AI review bot has
-// something to review on a fresh PR.
-// another comment for AI BOT to review
-const usage = `Daily Activity Review Bot
+const DatePattern = Schema.String.pipe(Schema.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/)))
 
-usage:
-  bun run tracker              start the active-window tracking daemon
-  bun run report               produce today's report
-  bun run report --date 2026-08-04   produce a report for a specific local day
-  bun run migrate              apply pending SQL migrations`
+const date = Flag.string("date").pipe(
+  Flag.withSchema(DatePattern),
+  Flag.withDescription("Report for this local day (defaults to today)"),
+  Flag.optional,
+)
 
-const parseDateArg = (args: ReadonlyArray<string>): string => {
-  const index = args.indexOf("--date")
-  if (index === -1) return todayLocal()
-  const value = args[index + 1]
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw new Error(`Invalid --date value "${value}" (expected YYYY-MM-DD)`)
-  }
-  return value
-}
+const report = Command.make("report", { date }, ({ date }) =>
+  reportProgram(Option.getOrElse(date, () => todayLocal())),
+).pipe(
+  Command.withDescription("Produce the end-of-day report for a local day"),
+  Command.withExamples([
+    { command: "bun run src/cli.ts report", description: "Report for today" },
+    { command: "bun run src/cli.ts report --date 2026-08-04", description: "Report for a specific local day" },
+  ]),
+)
 
-const program = Effect.gen(function* () {
-  const [command, ...rest] = process.argv.slice(2)
+const tracker = Command.make("tracker", {}, () =>
+  Effect.gen(function* () {
+    const service = yield* Tracker
+    yield* service.run
+  }),
+).pipe(Command.withDescription("Start the active-window tracking daemon"))
 
-  switch (command) {
-    case "tracker": {
-      const tracker = yield* Tracker
-      yield* tracker.run
-      break
-    }
-    case "report": {
-      const date = parseDateArg(rest)
-      yield* reportProgram(date)
-      break
-    }
-    case "migrate": {
-      yield* migrateProgram
-      break
-    }
-    default:
-      console.log(usage)
-  }
+const migrate = Command.make("migrate", {}, () => migrateProgram).pipe(
+  Command.withDescription("Apply pending SQL migrations"),
+)
+
+const app = Command.make("daily").pipe(
+  Command.withDescription("Daily Activity Review Bot"),
+  Command.withSubcommands([tracker, report, migrate]),
+)
+
+const program = Command.run(app, {
+  version: "1.0.0",
 })
 
 const main = program.pipe(
@@ -63,12 +61,7 @@ const main = program.pipe(
   Effect.provide(groqLayer),
   Effect.provide(dbLayer),
   Effect.provide(appConfigLayer),
+  Effect.provide(BunServices.layer),
 )
 
-Effect.runPromise(main).then(
-  () => process.exit(0),
-  (error) => {
-    console.error(error instanceof Error ? error.message : String(error))
-    process.exit(1)
-  },
-)
+BunRuntime.runMain(main)
