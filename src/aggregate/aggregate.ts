@@ -184,5 +184,3 @@ export const aggregate = (options: {
       ),
   }
 }
-
-export const appCategory = (app: string): Category => categorizeApp(app)
