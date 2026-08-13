@@ -1,0 +1,12 @@
+name: Quality Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  quality:
+    uses: ./.github/workflows/reusable-quality-gates.yml
+    secrets:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
