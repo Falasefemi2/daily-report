@@ -1,4 +1,3 @@
-import type { Stats } from "node:fs"
 import * as fs from "node:fs/promises"
 import * as Effect from "effect/Effect"
 
@@ -27,16 +26,4 @@ export const makeDirectory = (
   Effect.tryPromise({
     try: () => fs.mkdir(directory, options),
     catch: (cause) => new Error(`Failed to create directory ${directory}: ${String(cause)}`),
-  })
-
-export const stat = (file: string): Effect.Effect<Stats, Error> =>
-  Effect.tryPromise({
-    try: () => fs.stat(file),
-    catch: (cause) => new Error(`Failed to stat ${file}: ${String(cause)}`),
-  })
-
-export const openFile = (file: string): Effect.Effect<fs.FileHandle, Error> =>
-  Effect.tryPromise({
-    try: () => fs.open(file, "r"),
-    catch: (cause) => new Error(`Failed to open ${file}: ${String(cause)}`),
   })

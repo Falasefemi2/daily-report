@@ -1,7 +1,5 @@
 export type Category = "code editor" | "terminal" | "browser" | "comms" | "other"
 
-export const categories: ReadonlyArray<Category> = ["code editor", "terminal", "browser", "comms", "other"]
-
 const normalize = (app: string): string =>
   app
     .toLowerCase()
