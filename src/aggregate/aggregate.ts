@@ -1,5 +1,4 @@
 import * as Schema from "effect/Schema"
-import type { Category } from "./categories.js"
 import { categorizeApp } from "./categories.js"
 import { redactTitle } from "./redact.js"
 
@@ -73,7 +72,10 @@ export type DailyReport = Schema.Schema.Type<typeof DailyReport>
 
 const toMinutes = (ms: number): number => Math.max(0, ms) / 60000
 
-const emptyBreakdown = (): Record<Category, number> => ({
+/** Mutable accumulation shape of `CategoryBreakdown`, for building totals before freezing. */
+type MutableBreakdown = { -readonly [K in keyof CategoryBreakdown]: CategoryBreakdown[K] }
+
+const emptyBreakdown = (): MutableBreakdown => ({
   "code editor": 0,
   terminal: 0,
   browser: 0,
