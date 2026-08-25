@@ -53,11 +53,16 @@ export const render = (report: DailyReport, response: LlmResponse): string => {
   return lines.join("\n")
 }
 
+/** Structural contract satisfied by every error channel mapped into ReportError. */
+interface ReportedCause {
+  readonly message: string
+}
+
 const mapError =
   (label: string) =>
-  (error: unknown): ReportError =>
+  (error: ReportedCause): ReportError =>
     new ReportError({
-      message: `${label}: ${error instanceof Error ? error.message : String(error)}`,
+      message: `${label}: ${error.message}`,
     })
 
 /**

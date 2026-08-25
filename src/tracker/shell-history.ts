@@ -66,29 +66,24 @@ const parseHistory = (path: string, lines: ReadonlyArray<string>): ReadonlyArray
   return []
 }
 
-export const layer = Layer.effect(
-  ShellHistory,
-  Effect.gen(function* () {
-    const readNew = Effect.fn("ShellHistory.readNew")(function* (path, offset) {
-      const content = yield* Fs.readFileString(path).pipe(
-        Effect.mapError((e) => new ShellHistoryError({ message: e.message })),
-      )
+const readNew = Effect.fn("ShellHistory.readNew")(function* (path: string, offset: number) {
+  const content = yield* Fs.readFileString(path).pipe(
+    Effect.mapError((e) => new ShellHistoryError({ message: e.message })),
+  )
 
-      if (content.length <= offset) {
-        return { events: [], newOffset: content.length }
-      }
+  if (content.length <= offset) {
+    return { events: [], newOffset: content.length }
+  }
 
-      const newContent = content.slice(offset)
-      const lines = newContent.split("\n")
-      const completeLines = newContent.endsWith("\n") ? lines : lines.slice(0, -1)
-      const partial = newContent.endsWith("\n") ? "" : (lines.at(-1) ?? "")
+  const newContent = content.slice(offset)
+  const lines = newContent.split("\n")
+  const completeLines = newContent.endsWith("\n") ? lines : lines.slice(0, -1)
+  const partial = newContent.endsWith("\n") ? "" : (lines.at(-1) ?? "")
 
-      return {
-        events: parseHistory(path, completeLines),
-        newOffset: content.length - partial.length,
-      }
-    })
+  return {
+    events: parseHistory(path, completeLines),
+    newOffset: content.length - partial.length,
+  }
+})
 
-    return ShellHistory.of({ readNew })
-  }),
-)
+export const layer = Layer.succeed(ShellHistory, ShellHistory.of({ readNew }))

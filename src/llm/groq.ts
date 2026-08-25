@@ -10,7 +10,36 @@ import { AppConfigService } from "../config.js"
 import { LlmClient, LlmError, LlmResponse } from "./llm-client.js"
 import { buildUserPrompt, systemPrompt } from "./prompt.js"
 
-const postChat = (endpoint: string, apiKey: Redacted.Redacted, body: unknown): Effect.Effect<string, LlmError> =>
+interface ChatRequestMessage {
+  readonly role: "system" | "user"
+  readonly content: string
+}
+
+/** OpenAI-compatible chat completion request body sent to Groq. */
+interface ChatRequest {
+  readonly model: string
+  readonly messages: ReadonlyArray<ChatRequestMessage>
+  readonly temperature: number
+  readonly response_format: { readonly type: "json_object" }
+}
+
+const GroqChatCompletion = Schema.Struct({
+  choices: Schema.Array(
+    Schema.Struct({
+      message: Schema.Struct({
+        content: Schema.String,
+      }),
+    }),
+  ),
+})
+
+const parseJsonText = (text: string, label: string): Effect.Effect<unknown, LlmError> =>
+  Effect.try({
+    try: () => JSON.parse(text),
+    catch: (cause) => new LlmError({ message: `${label}: ${cause instanceof Error ? cause.message : String(cause)}` }),
+  })
+
+const postChat = (endpoint: string, apiKey: Redacted.Redacted, body: ChatRequest): Effect.Effect<string, LlmError> =>
   Effect.tryPromise({
     try: async () => {
       const response = await fetch(endpoint, {
@@ -31,18 +60,18 @@ const postChat = (endpoint: string, apiKey: Redacted.Redacted, body: unknown): E
   })
 
 const extractContent = (raw: string): Effect.Effect<unknown, LlmError> =>
-  Effect.try({
-    try: () => {
-      const json = JSON.parse(raw) as {
-        choices?: ReadonlyArray<{ message?: { content?: string } }>
-      }
-      const content = json.choices?.[0]?.message?.content
-      if (typeof content !== "string") {
-        throw new Error("Groq response missing choices[0].message.content")
-      }
-      return JSON.parse(content) as unknown
-    },
-    catch: (cause) => new LlmError({ message: cause instanceof Error ? cause.message : String(cause) }),
+  Effect.gen(function* () {
+    const completion = yield* parseJsonText(raw, "Invalid Groq response JSON")
+    const wire = yield* Schema.decodeUnknownEffect(GroqChatCompletion)(completion).pipe(
+      Effect.mapError(
+        (error): LlmError => new LlmError({ message: `Malformed Groq response envelope: ${error.message}` }),
+      ),
+    )
+    const [choice] = wire.choices
+    if (choice === undefined) {
+      return yield* Effect.fail(new LlmError({ message: "Groq response missing choices[0].message.content" }))
+    }
+    return yield* parseJsonText(choice.message.content, "Invalid LLM response payload")
   })
 
 export const layer = Layer.effect(
@@ -56,7 +85,7 @@ export const layer = Layer.effect(
       }
       const apiKey = config.groqApiKey.value
 
-      const body = {
+      const body: ChatRequest = {
         model: config.groqModel,
         messages: [
           { role: "system", content: systemPrompt },
